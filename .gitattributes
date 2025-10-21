@@ -5,5 +5,6 @@
 *.html diff=html
 *.md diff=markdown
 *.php diff=php
+* text=auto
 
 /.github/FUNDING.yml export-ignore

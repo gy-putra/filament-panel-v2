@@ -26,7 +26,7 @@ class UserResource extends Resource
     /**
      * The settings navigation group.
      */
-    protected static ?string $navigationGroup = 'Collections';
+    protected static ?string $navigationGroup = 'Collection';
 
     /**
      * The settings navigation sort order.

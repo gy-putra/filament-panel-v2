@@ -2,6 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Pendaftaran;
+use App\Models\User;
+use App\Observers\PendaftaranObserver;
+use App\Observers\PendaftaranRoomingObserver;
+use App\Observers\UserObserver;
 use Filament\Support\Facades\FilamentView;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,6 +28,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Register model observers with proper dependency injection
+        Pendaftaran::observe(app(PendaftaranObserver::class));
+        Pendaftaran::observe(app(PendaftaranRoomingObserver::class));
+        User::observe(app(UserObserver::class));
     }
 }

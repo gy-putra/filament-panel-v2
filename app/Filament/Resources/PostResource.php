@@ -36,7 +36,7 @@ class PostResource extends Resource
     /**
      * The resource navigation group.
      */
-    protected static ?string $navigationGroup = 'Collections';
+    protected static ?string $navigationGroup = 'Collection';
 
     /**
      * The resource navigation sort order.
