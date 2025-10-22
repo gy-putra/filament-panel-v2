@@ -72,6 +72,7 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 'Master Data',
                 'Departure Management',
+                'Tabungan Management',
                 'Collection',
                 'Media',
                 'Settings',
