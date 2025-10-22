@@ -18,6 +18,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Grouping\Group;
 
 class RoomAssignmentResource extends Resource
 {
@@ -47,7 +48,7 @@ class RoomAssignmentResource extends Resource
                             ->relationship('pendaftaran', 'kode_pendaftaran')
                             ->searchable(['kode_pendaftaran'])
                             ->preload()
-                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->kode_pendaftaran} - {$record->jamaah->nama_lengkap}"),
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->jamaah->nama_lengkap} - {$record->jamaah->kota}"),
                         
                         Select::make('room_id')
                             ->label('Kamar')
@@ -150,6 +151,18 @@ class RoomAssignmentResource extends Resource
                     ->dateTime('d M Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->groups([
+                Group::make('room.tipe_kamar')
+                    ->label('Tipe Kamar')
+                    ->collapsible()
+                    ->getTitleFromRecordUsing(fn (RoomAssignment $record): string => match ($record->room->tipe_kamar) {
+                        'single' => 'Single Room',
+                        'double' => 'Double Room',
+                        'triple' => 'Triple Room',
+                        'quad' => 'Quad Room',
+                        default => ucfirst($record->room->tipe_kamar) . ' Room',
+                    }),
             ])
             ->filters([
                 SelectFilter::make('pendaftaran.paket_keberangkatan_id')

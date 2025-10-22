@@ -45,7 +45,7 @@ class RoomResource extends Resource
                             ->label('Hotel Booking')
                             ->required()
                             ->relationship('hotelBooking', 'id')
-                            ->getOptionLabelFromRecordUsing(fn ($record) => "#{$record->id} - {$record->paketKeberangkatan->nama_paket} - {$record->hotel->nama}")
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->hotel->nama} - {$record->paketKeberangkatan->nama_paket}")
                             ->searchable()
                             ->preload(),
                         
@@ -155,14 +155,32 @@ class RoomResource extends Resource
                         default => 'gray',
                     }),
                 
-                TextColumn::make('status')
+                TextColumn::make('room_status')
                     ->label('Status')
+                    ->getStateUsing(function (Room $record): string {
+                        $occupancy = $record->roomAssignments()->count();
+                        $capacity = $record->kapasitas;
+                        
+                        if ($occupancy >= $capacity) {
+                            return 'occupied';
+                        } elseif ($occupancy > 0) {
+                            return 'partially_occupied';
+                        } else {
+                            return 'available';
+                        }
+                    })
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'available' => 'success',
-                        'occupied' => 'warning',
-                        'maintenance' => 'danger',
+                        'partially_occupied' => 'warning',
+                        'occupied' => 'danger',
                         default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'available' => 'Tersedia',
+                        'partially_occupied' => 'Sebagian Terisi',
+                        'occupied' => 'Penuh',
+                        default => $state,
                     }),
                 
                 TextColumn::make('created_at')

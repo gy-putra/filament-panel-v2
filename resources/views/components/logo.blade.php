@@ -1,3 +1,3 @@
 <div class="text-xl">
-  Filament <span class="text-primary-500 font-medium">Starter</span>
+  Nawitatour <span class="text-primary-500 font-medium">Dashboard</span>
 </div>

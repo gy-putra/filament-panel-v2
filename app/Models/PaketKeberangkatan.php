@@ -36,7 +36,7 @@ class PaketKeberangkatan extends Model
     ];
 
     // Relationships
-    public function pendaftaran(): HasMany
+    public function pendaftarans(): HasMany
     {
         return $this->hasMany(Pendaftaran::class);
     }

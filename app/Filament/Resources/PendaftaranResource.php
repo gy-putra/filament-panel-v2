@@ -18,6 +18,7 @@ use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 
 use Filament\Forms\Components\Select;
+use Filament\Forms\Get;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Section;
@@ -52,7 +53,12 @@ class PendaftaranResource extends Resource
                             ->required()
                             ->relationship('paketKeberangkatan', 'nama_paket')
                             ->searchable(['nama_paket', 'kode_paket'])
-                            ->preload(),
+                            ->preload()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                // Clear jamaah selection when paket changes to avoid conflicts
+                                $set('jamaah_id', null);
+                            }),
                         
                         Select::make('jamaah_id')
                             ->label('Jamaah')
@@ -60,9 +66,39 @@ class PendaftaranResource extends Resource
                             ->relationship('jamaah', 'nama_lengkap')
                             ->searchable(['nama_lengkap', 'no_ktp'])
                             ->preload()
-                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->nama_lengkap} - {$record->no_ktp}"),
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->nama_lengkap} - {$record->kota}")
+                            ->reactive()
+                            ->rules([
+                                'required',
+                                function (Get $get) {
+                                    return function (string $attribute, $value, \Closure $fail) use ($get) {
+                                        $paketId = $get('paket_keberangkatan_id');
+                                        
+                                        if ($paketId && $value) {
+                                            // Get the current record ID for edit mode
+                                            $recordId = null;
+                                            if (request()->route('record')) {
+                                                $recordId = request()->route('record');
+                                            }
+                                            
+                                            $query = \App\Models\Pendaftaran::where('paket_keberangkatan_id', $paketId)
+                                ->where('jamaah_id', $value)
+                                ->whereNull('deleted_at'); // Only check active records
+                            
+                            // Exclude current record when editing
+                            if ($recordId) {
+                                $query->where('id', '!=', $recordId);
+                            }
+                            
+                            if ($query->exists()) {
+                                $fail('Jamaah ini sudah terdaftar pada paket keberangkatan yang dipilih.');
+                            }
+                                        }
+                                    };
+                                },
+                            ]),
                         
-                        DatePicker::make('tanggal_daftar')
+                        DatePicker::make('tgl_daftar')
                             ->label('Tanggal Daftar')
                             ->required()
                             ->default(now())
@@ -110,7 +146,7 @@ class PendaftaranResource extends Resource
                     ->label('No. KTP')
                     ->searchable(['jamaah.no_ktp']),
                 
-                TextColumn::make('tanggal_daftar')
+                TextColumn::make('tgl_daftar')
                     ->label('Tanggal Daftar')
                     ->date('d M Y')
                     ->sortable(),
@@ -147,7 +183,7 @@ class PendaftaranResource extends Resource
                         'cancelled' => 'Cancelled',
                     ]),
                 
-                Filter::make('tanggal_daftar')
+                Filter::make('tgl_daftar')
                     ->form([
                         DatePicker::make('dari_tanggal')
                             ->label('Dari Tanggal'),
@@ -158,24 +194,32 @@ class PendaftaranResource extends Resource
                         return $query
                             ->when(
                                 $data['dari_tanggal'],
-                                fn (EloquentBuilder $query, $date): EloquentBuilder => $query->whereDate('tanggal_daftar', '>=', $date),
+                                fn (EloquentBuilder $query, $date): EloquentBuilder => $query->whereDate('tgl_daftar', '>=', $date),
                             )
                             ->when(
                                 $data['sampai_tanggal'],
-                                fn (EloquentBuilder $query, $date): EloquentBuilder => $query->whereDate('tanggal_daftar', '<=', $date),
+                                fn (EloquentBuilder $query, $date): EloquentBuilder => $query->whereDate('tgl_daftar', '<=', $date),
                             );
                     }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->action(function ($record) {
+                        $record->forceDelete();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                $record->forceDelete();
+                            }
+                        }),
                 ]),
             ])
-            ->defaultSort('tanggal_daftar', 'desc');
+            ->defaultSort('tgl_daftar', 'desc');
     }
 
     public static function getRelations(): array

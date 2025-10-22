@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Validation\ValidationException;
 
 class Pendaftaran extends Model
 {
@@ -44,6 +45,41 @@ class Pendaftaran extends Model
     public function roomAssignments(): HasMany
     {
         return $this->hasMany(RoomAssignment::class);
+    }
+
+    // Model Events
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($pendaftaran) {
+            // Check for duplicate combination before creating (excluding soft deleted records)
+            $exists = static::where('paket_keberangkatan_id', $pendaftaran->paket_keberangkatan_id)
+                ->where('jamaah_id', $pendaftaran->jamaah_id)
+                ->whereNull('deleted_at') // Only check active records
+                ->exists();
+
+            if ($exists) {
+                throw ValidationException::withMessages([
+                    'jamaah_id' => 'Jamaah ini sudah terdaftar pada paket keberangkatan yang dipilih.'
+                ]);
+            }
+        });
+
+        static::updating(function ($pendaftaran) {
+            // Check for duplicate combination before updating (excluding current record and soft deleted records)
+            $exists = static::where('paket_keberangkatan_id', $pendaftaran->paket_keberangkatan_id)
+                ->where('jamaah_id', $pendaftaran->jamaah_id)
+                ->where('id', '!=', $pendaftaran->id)
+                ->whereNull('deleted_at') // Only check active records
+                ->exists();
+
+            if ($exists) {
+                throw ValidationException::withMessages([
+                    'jamaah_id' => 'Jamaah ini sudah terdaftar pada paket keberangkatan yang dipilih.'
+                ]);
+            }
+        });
     }
 
     // Scopes

@@ -1,4 +1,4 @@
-# Filament Starter
+# NAWITATOUR
 
 Here lives a beautiful starting point to quickly bootstrap your next [TALL stack](https://tallstack.dev/) application utilizing [Filament](https://filamentphp.com/) for the admin panel.
 
@@ -70,7 +70,7 @@ The following [Filament plugins](https://filamentphp.com/plugins) come fully imp
 
 ## Bug Reports
 
-If you discover a bug in Filament Starter, please [open an issue](https://github.com/log1x/filament-starter/issues).
+If you discover a bug in NAWITATOUR, please [open an issue](https://github.com/log1x/filament-starter/issues).
 
 ## Contributing
 
@@ -78,4 +78,4 @@ Contributing whether it be through PRs, reporting an issue, or suggesting an ide
 
 ## License
 
-Filament Starter is provided under the [MIT License](LICENSE.md).
+NAWITATOUR is provided under the [MIT License](LICENSE.md).

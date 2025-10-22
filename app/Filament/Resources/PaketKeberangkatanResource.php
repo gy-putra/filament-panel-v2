@@ -46,6 +46,13 @@ class PaketKeberangkatanResource extends Resource
             ->schema([
                 Section::make('Informasi Paket')
                     ->schema([
+                        TextInput::make('kode_paket')
+                            ->label('Kode Paket')
+                            ->required()
+                            ->maxLength(20)
+                            ->unique(ignoreRecord: true)
+                            ->placeholder('Contoh: UMRH-2025001'),
+                        
                         TextInput::make('nama_paket')
                             ->label('Nama Paket')
                             ->required()
@@ -56,27 +63,34 @@ class PaketKeberangkatanResource extends Resource
                             ->rows(3)
                             ->maxLength(1000),
                     ])
-                    ->columns(1),
+                    ->columns(2),
                 
-                Section::make('Jadwal Keberangkatan')
+                Section::make('Jadwal & Kuota')
                     ->schema([
-                        DatePicker::make('tanggal_keberangkatan')
+                        DatePicker::make('tgl_keberangkatan')
                             ->label('Tanggal Keberangkatan')
                             ->required()
                             ->native(false),
                         
-                        DatePicker::make('tanggal_kepulangan')
+                        DatePicker::make('tgl_kepulangan')
                             ->label('Tanggal Kepulangan')
                             ->required()
                             ->native(false)
-                            ->after('tanggal_keberangkatan'),
+                            ->after('tgl_keberangkatan'),
+                        
+                        TextInput::make('kuota_total')
+                            ->label('Kuota Total')
+                            ->required()
+                            ->numeric()
+                            ->minValue(1)
+                            ->default(0),
                     ])
-                    ->columns(2),
+                    ->columns(3),
                 
                 Section::make('Harga & Status')
                     ->schema([
-                        TextInput::make('harga')
-                            ->label('Harga')
+                        TextInput::make('harga_paket')
+                            ->label('Harga Paket')
                             ->required()
                             ->numeric()
                             ->prefix('Rp')
@@ -87,8 +101,10 @@ class PaketKeberangkatanResource extends Resource
                             ->required()
                             ->options([
                                 'draft' => 'Draft',
+                                'open' => 'Open',
                                 'published' => 'Published',
                                 'closed' => 'Closed',
+                                'cancelled' => 'Cancelled',
                             ])
                             ->default('draft'),
                     ])
@@ -101,23 +117,33 @@ class PaketKeberangkatanResource extends Resource
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query->withCount('pendaftarans'))
             ->columns([
+                TextColumn::make('kode_paket')
+                    ->label('Kode Paket')
+                    ->searchable()
+                    ->sortable()
+                    ->weight(FontWeight::Bold),
+                
                 TextColumn::make('nama_paket')
                     ->label('Nama Paket')
                     ->searchable(['nama_paket'])
                     ->sortable()
                     ->weight(FontWeight::Bold),
                 
-                TextColumn::make('tanggal_keberangkatan')
+                TextColumn::make('tgl_keberangkatan')
                     ->label('Tanggal Keberangkatan')
                     ->date('d M Y')
                     ->sortable(),
                 
-                TextColumn::make('tanggal_kepulangan')
+                TextColumn::make('tgl_kepulangan')
                     ->label('Tanggal Kepulangan')
                     ->date('d M Y')
                     ->sortable(),
                 
-                TextColumn::make('harga')
+                TextColumn::make('kuota_total')
+                    ->label('Kuota')
+                    ->sortable(),
+                
+                TextColumn::make('harga_paket')
                     ->label('Harga')
                     ->money('IDR')
                     ->sortable(),
@@ -127,8 +153,10 @@ class PaketKeberangkatanResource extends Resource
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'draft' => 'gray',
+                        'open' => 'info',
                         'published' => 'success',
                         'closed' => 'danger',
+                        'cancelled' => 'warning',
                         default => 'gray',
                     })
                     ->sortable(),
@@ -149,11 +177,13 @@ class PaketKeberangkatanResource extends Resource
                     ->label('Status')
                     ->options([
                         'draft' => 'Draft',
+                        'open' => 'Open',
                         'published' => 'Published',
                         'closed' => 'Closed',
+                        'cancelled' => 'Cancelled',
                     ]),
                 
-                Filter::make('tanggal_keberangkatan')
+                Filter::make('tgl_keberangkatan')
                     ->form([
                         DatePicker::make('dari_tanggal')
                             ->label('Dari Tanggal'),
@@ -164,11 +194,11 @@ class PaketKeberangkatanResource extends Resource
                         return $query
                             ->when(
                                 $data['dari_tanggal'],
-                                fn (EloquentBuilder $query, $date): EloquentBuilder => $query->whereDate('tanggal_keberangkatan', '>=', $date),
+                                fn (EloquentBuilder $query, $date): EloquentBuilder => $query->whereDate('tgl_keberangkatan', '>=', $date),
                             )
                             ->when(
                                 $data['sampai_tanggal'],
-                                fn (EloquentBuilder $query, $date): EloquentBuilder => $query->whereDate('tanggal_keberangkatan', '<=', $date),
+                                fn (EloquentBuilder $query, $date): EloquentBuilder => $query->whereDate('tgl_keberangkatan', '<=', $date),
                             );
                     }),
             ])
@@ -181,7 +211,7 @@ class PaketKeberangkatanResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('tanggal_keberangkatan', 'desc');
+            ->defaultSort('tgl_keberangkatan', 'desc');
     }
 
     public static function getRelations(): array

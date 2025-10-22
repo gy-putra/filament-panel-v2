@@ -4,15 +4,29 @@ namespace App\Observers;
 
 use App\Models\Pendaftaran;
 use App\Services\KuotaService;
+use App\Services\KodePendaftaranService;
 use Illuminate\Support\Facades\Log;
 
 class PendaftaranObserver
 {
     protected KuotaService $kuotaService;
+    protected KodePendaftaranService $kodePendaftaranService;
 
-    public function __construct(KuotaService $kuotaService)
+    public function __construct(KuotaService $kuotaService, KodePendaftaranService $kodePendaftaranService)
     {
         $this->kuotaService = $kuotaService;
+        $this->kodePendaftaranService = $kodePendaftaranService;
+    }
+
+    /**
+     * Handle the Pendaftaran "creating" event.
+     */
+    public function creating(Pendaftaran $pendaftaran): void
+    {
+        // Generate kode_pendaftaran if not provided
+        if (empty($pendaftaran->kode_pendaftaran)) {
+            $pendaftaran->kode_pendaftaran = $this->kodePendaftaranService->generate();
+        }
     }
 
     /**
