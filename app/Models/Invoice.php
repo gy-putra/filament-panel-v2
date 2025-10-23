@@ -48,6 +48,11 @@ class Invoice extends Model
         return $query->where('status', 'paid');
     }
 
+    public function scopeCancelled($query)
+    {
+        return $query->where('status', 'cancelled');
+    }
+
     // Helper methods for automatic creation from allocations
     public static function createFromAllocation(TabunganAlokasi $alokasi): self
     {

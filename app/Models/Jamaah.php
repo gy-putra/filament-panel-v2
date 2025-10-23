@@ -30,7 +30,15 @@ class Jamaah extends Model
         'kewarganegaraan',
         'no_ktp',
         'no_bpjs',
+        'no_paspor',
+        'kota_paspor',
+        'tgl_terbit_paspor',
+        'tgl_expired_paspor',
+        'foto_jamaah',
         'alamat',
+        'kabupaten',
+        'kecamatan',
+        'kelurahan',
         'kota',
         'provinsi',
         'negara',
@@ -45,6 +53,8 @@ class Jamaah extends Model
      */
     protected $casts = [
         'tgl_lahir' => 'date',
+        'tgl_terbit_paspor' => 'date',
+        'tgl_expired_paspor' => 'date',
     ];
 
     /**

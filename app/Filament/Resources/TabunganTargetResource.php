@@ -230,4 +230,10 @@ class TabunganTargetResource extends Resource
             'edit' => Pages\EditTabunganTarget::route('/{record}/edit'),
         ];
     }
+
+    // Sembunyikan dari sidebar
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // sembunyikan dari sidebar
+    }
 }

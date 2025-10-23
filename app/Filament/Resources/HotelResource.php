@@ -34,7 +34,7 @@ class HotelResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Hotel';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 6;
 
     public static function form(Form $form): Form
     {
@@ -42,6 +42,14 @@ class HotelResource extends Resource
             ->schema([
                 Section::make('Informasi Hotel')
                     ->schema([
+                        Select::make('paket_keberangkatan_id')
+                            ->label('Paket Keberangkatan')
+                            ->required()
+                            ->relationship('paketKeberangkatan', 'nama_paket')
+                            ->searchable(['nama_paket', 'kode_paket'])
+                            ->preload()
+                            ->nullable(),
+                        
                         TextInput::make('nama')
                             ->label('Nama Hotel')
                             ->required()
@@ -64,6 +72,13 @@ class HotelResource extends Resource
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query->withCount('hotelBookings'))
             ->columns([
+                TextColumn::make('paketKeberangkatan.nama_paket')
+                    ->label('Paket Keberangkatan')
+                    ->searchable(['paket_keberangkatan.nama_paket'])
+                    ->sortable()
+                    ->limit(30)
+                    ->placeholder('Tidak ada paket'),
+                
                 TextColumn::make('nama')
                     ->label('Nama Hotel')
                     ->searchable()
@@ -90,6 +105,12 @@ class HotelResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('paket_keberangkatan_id')
+                    ->label('Paket Keberangkatan')
+                    ->relationship('paketKeberangkatan', 'nama_paket')
+                    ->searchable()
+                    ->preload(),
+                
                 SelectFilter::make('kota')
                     ->label('Kota')
                     ->options([

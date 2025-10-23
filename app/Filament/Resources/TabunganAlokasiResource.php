@@ -359,4 +359,10 @@ class TabunganAlokasiResource extends Resource
             'edit' => Pages\EditTabunganAlokasi::route('/{record}/edit'),
         ];
     }
+
+    // Sembunyikan dari sidebar
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // sembunyikan dari sidebar
+    }
 }

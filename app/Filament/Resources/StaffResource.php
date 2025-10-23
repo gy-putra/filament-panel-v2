@@ -25,7 +25,7 @@ class StaffResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationGroup = 'Departure Management';
+    protected static ?string $navigationGroup = 'Master Data';
 
     protected static ?string $navigationLabel = 'Staff';
 
@@ -33,7 +33,7 @@ class StaffResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Staff';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {

@@ -70,29 +70,31 @@ class PendaftaranResource extends Resource
                             ->reactive()
                             ->rules([
                                 'required',
-                                function (Get $get) {
-                                    return function (string $attribute, $value, \Closure $fail) use ($get) {
+                                function (Get $get, $livewire) {
+                                    return function (string $attribute, $value, \Closure $fail) use ($get, $livewire) {
                                         $paketId = $get('paket_keberangkatan_id');
                                         
                                         if ($paketId && $value) {
                                             // Get the current record ID for edit mode
                                             $recordId = null;
-                                            if (request()->route('record')) {
-                                                $recordId = request()->route('record');
+                                            
+                                            // Check if we're in edit mode by looking at the Livewire component
+                                            if (isset($livewire->record) && $livewire->record) {
+                                                $recordId = $livewire->record->id;
                                             }
                                             
                                             $query = \App\Models\Pendaftaran::where('paket_keberangkatan_id', $paketId)
-                                ->where('jamaah_id', $value)
-                                ->whereNull('deleted_at'); // Only check active records
-                            
-                            // Exclude current record when editing
-                            if ($recordId) {
-                                $query->where('id', '!=', $recordId);
-                            }
-                            
-                            if ($query->exists()) {
-                                $fail('Jamaah ini sudah terdaftar pada paket keberangkatan yang dipilih.');
-                            }
+                                                ->where('jamaah_id', $value)
+                                                ->whereNull('deleted_at'); // Only check active records
+                                            
+                                            // Exclude current record when editing
+                                            if ($recordId) {
+                                                $query->where('id', '!=', $recordId);
+                                            }
+                                            
+                                            if ($query->exists()) {
+                                                $fail('Jamaah ini sudah terdaftar pada paket keberangkatan yang dipilih.');
+                                            }
                                         }
                                     };
                                 },
@@ -103,6 +105,30 @@ class PendaftaranResource extends Resource
                             ->required()
                             ->default(now())
                             ->native(false),
+                        
+                        Select::make('reference')
+                            ->label('Reference')
+                            ->options([
+                                'Social Media' => 'Social Media',
+                                'Walk In' => 'Walk In',
+                                'Agent' => 'Agent',
+                            ])
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                // Clear sales agent when reference is not Agent
+                                if ($state !== 'Agent') {
+                                    $set('sales_agent_id', null);
+                                }
+                            }),
+                        
+                        Select::make('sales_agent_id')
+                            ->label('Agent Name')
+                            ->relationship('salesAgent', 'name')
+                            ->searchable(['name', 'agent_code'])
+                            ->preload()
+                            ->visible(fn (Get $get) => $get('reference') === 'Agent')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->name} ({$record->agent_code})")
+                            ->required(fn (Get $get) => $get('reference') === 'Agent'),
                     ])
                     ->columns(1),
                 
@@ -150,6 +176,24 @@ class PendaftaranResource extends Resource
                     ->label('Tanggal Daftar')
                     ->date('d M Y')
                     ->sortable(),
+                
+                TextColumn::make('reference')
+                    ->label('Reference')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Social Media' => 'info',
+                        'Walk In' => 'warning',
+                        'Agent' => 'success',
+                        default => 'gray',
+                    })
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
+                
+                TextColumn::make('salesAgent.name')
+                    ->label('Agent Name')
+                    ->searchable(['sales_agents.name', 'sales_agents.agent_code'])
+                    ->formatStateUsing(fn ($record) => $record->salesAgent ? "{$record->salesAgent->name} ({$record->salesAgent->agent_code})" : '-')
+                    ->toggleable(isToggledHiddenByDefault: false),
                 
                 TextColumn::make('status')
                     ->label('Status')
@@ -201,6 +245,20 @@ class PendaftaranResource extends Resource
                                 fn (EloquentBuilder $query, $date): EloquentBuilder => $query->whereDate('tgl_daftar', '<=', $date),
                             );
                     }),
+                
+                SelectFilter::make('reference')
+                    ->label('Reference')
+                    ->options([
+                        'Social Media' => 'Social Media',
+                        'Walk In' => 'Walk In',
+                        'Agent' => 'Agent',
+                    ]),
+                
+                SelectFilter::make('sales_agent_id')
+                    ->label('Sales Agent')
+                    ->relationship('salesAgent', 'name')
+                    ->searchable()
+                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

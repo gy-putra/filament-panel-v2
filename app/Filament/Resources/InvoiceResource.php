@@ -67,11 +67,11 @@ class InvoiceResource extends Resource
                         Select::make('status')
                             ->label('Status')
                             ->options([
-                                'draft' => 'Draft',
-                                'active' => 'Active',
-                                'paid' => 'Paid',
-                                'cancelled' => 'Cancelled',
-                            ])
+                            'draft' => 'Draft',
+                            'active' => 'Active',
+                            'paid' => 'Paid',
+                            'cancelled' => 'Cancelled',
+                        ])
                             ->default('draft')
                             ->required()
                             ->columnSpan(1),
@@ -111,10 +111,10 @@ class InvoiceResource extends Resource
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Status')
                     ->colors([
-                        'secondary' => 'draft',
-                        'primary' => 'active',
-                        'success' => 'paid',
-                        'danger' => 'cancelled',
+                        'draft' => 'gray',
+                        'active' => 'warning',
+                        'paid' => 'success',
+                        'cancelled' => 'danger',
                     ]),
 
                 TextColumn::make('catatan')
@@ -181,5 +181,11 @@ class InvoiceResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    // Sembunyikan dari sidebar
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // sembunyikan dari sidebar
     }
 }

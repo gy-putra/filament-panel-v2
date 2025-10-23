@@ -34,7 +34,7 @@ class FlightSegmentResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Segmen Penerbangan';
 
-    protected static ?int $navigationSort = 7;
+    protected static ?int $navigationSort = 5;
 
     public static function form(Form $form): Form
     {

@@ -94,7 +94,7 @@ class TabunganResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Status & Saldo')
+                Forms\Components\Section::make('Status')
                     ->schema([
                         Forms\Components\Select::make('status')
                             ->label('Status')
@@ -112,6 +112,7 @@ class TabunganResource extends Resource
                             ->default(0)
                             ->prefix('Rp')
                             ->disabled()
+                            ->hidden(true)
                             ->dehydrated(false),
 
                         Forms\Components\TextInput::make('saldo_terkunci')
@@ -120,6 +121,7 @@ class TabunganResource extends Resource
                             ->default(0)
                             ->prefix('Rp')
                             ->disabled()
+                            ->hidden(true)
                             ->dehydrated(false),
                     ])
                     ->columns(3),
@@ -158,12 +160,14 @@ class TabunganResource extends Resource
 
                 Tables\Columns\TextColumn::make('saldo_tersedia')
                     ->label('Saldo Tersedia')
+                    ->hidden(true)
                     ->money('IDR')
                     ->sortable()
                     ->alignEnd(),
 
                 Tables\Columns\TextColumn::make('saldo_terkunci')
                     ->label('Saldo Terkunci')
+                    ->hidden(true)
                     ->money('IDR')
                     ->sortable()
                     ->alignEnd(),

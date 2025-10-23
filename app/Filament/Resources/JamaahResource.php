@@ -34,6 +34,7 @@ class JamaahResource extends Resource
                         Forms\Components\TextInput::make('kode_jamaah')
                             ->label('Kode Jamaah')
                             ->disabled(fn ($context) => $context === 'edit')
+                            ->hidden()
                             ->placeholder('Auto-generated')
                             ->columnSpan(1),
                         Forms\Components\TextInput::make('nama_lengkap')
@@ -108,6 +109,36 @@ class JamaahResource extends Resource
                     ])
                     ->columns(2),
 
+                Forms\Components\Section::make('Passport Information')
+                    ->schema([
+                        Forms\Components\TextInput::make('no_paspor')
+                            ->label('Passport Number')
+                            ->maxLength(50)
+                            ->columnSpan(1),
+                        Forms\Components\TextInput::make('kota_paspor')
+                            ->label('Passport City')
+                            ->maxLength(100)
+                            ->columnSpan(1),
+                        Forms\Components\DatePicker::make('tgl_terbit_paspor')
+                            ->label('Issue Date')
+                            ->maxDate(today())
+                            ->columnSpan(1),
+                        Forms\Components\DatePicker::make('tgl_expired_paspor')
+                            ->label('Passport Expiry')
+                            ->minDate(today())
+                            ->columnSpan(1),
+                        Forms\Components\FileUpload::make('foto_jamaah')
+                            ->label('Pilgrim Photo')
+                            ->image()
+                            ->avatar()
+                            ->imageEditor()
+                            ->directory('jamaah-photos')
+                            ->disk('public')
+                            ->visibility('public')
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2),
+
                 Forms\Components\Section::make('Contact & Address')
                     ->schema([
                         Forms\Components\Textarea::make('alamat')
@@ -115,6 +146,18 @@ class JamaahResource extends Resource
                             ->required()
                             ->rows(3)
                             ->columnSpanFull(),
+                        Forms\Components\TextInput::make('kabupaten')
+                            ->label('Kabupaten')
+                            ->maxLength(100)
+                            ->columnSpan(1),
+                        Forms\Components\TextInput::make('kecamatan')
+                            ->label('Kecamatan')
+                            ->maxLength(100)
+                            ->columnSpan(1),
+                        Forms\Components\TextInput::make('kelurahan')
+                            ->label('Kelurahan')
+                            ->maxLength(100)
+                            ->columnSpan(1),
                         Forms\Components\TextInput::make('kota')
                             ->label('Kota')
                             ->maxLength(100)
@@ -122,7 +165,7 @@ class JamaahResource extends Resource
                         Forms\Components\TextInput::make('provinsi')
                             ->label('Provinsi')
                             ->maxLength(100)
-                            ->columnSpan(1),
+                            ->columnSpan(2),
                         Forms\Components\TextInput::make('no_hp')
                             ->label('No. HP')
                             ->required()
@@ -165,10 +208,18 @@ class JamaahResource extends Resource
                 Tables\Columns\TextColumn::make('kode_jamaah')
                     ->label('Kode Jamaah')
                     ->badge()
+                    ->hidden()
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\ImageColumn::make('foto_jamaah')
+                    ->label('Photo')
+                    ->circular()
+                    ->size(40)
+                    ->disk('public')
+                    ->defaultImageUrl(asset('images/default-avatar.svg'))
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('nama_lengkap')
-                    ->label('Nama Lengkap')
+                    ->label('Nama Sesuai Paspor')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('nama_ayah')
@@ -198,14 +249,56 @@ class JamaahResource extends Resource
                     ->searchable()
                     ->copyable()
                     ->placeholder('N/A'),
+                Tables\Columns\TextColumn::make('no_paspor')
+                    ->label('No. Paspor')
+                    ->searchable()
+                    ->copyable()
+                    ->placeholder('N/A')
+                    ->toggleable(isToggledHiddenByDefault: false),
+                Tables\Columns\TextColumn::make('kota_paspor')
+                    ->label('Kota Paspor')
+                    ->searchable()
+                    ->placeholder('N/A')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('tgl_terbit_paspor')
+                    ->label('Terbit Paspor')
+                    ->date()
+                    ->sortable()
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: false),
+                Tables\Columns\TextColumn::make('tgl_expired_paspor')
+                    ->label('Expired Paspor')
+                    ->date()
+                    ->sortable()
+                    ->placeholder('-')
+                    ->color(fn ($state) => $state && $state->isPast() ? 'danger' : 'success')
+                    ->toggleable(isToggledHiddenByDefault: false),
+                Tables\Columns\TextColumn::make('kabupaten')
+                    ->label('Kabupaten')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: false),
+                Tables\Columns\TextColumn::make('kecamatan')
+                    ->label('Kecamatan')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: false),
+                Tables\Columns\TextColumn::make('kelurahan')
+                    ->label('Kelurahan')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('kota')
                     ->label('Kota')
                     ->searchable()
-                    ->placeholder('N/A'),
+                    ->placeholder('-'),
                 Tables\Columns\TextColumn::make('provinsi')
                     ->label('Provinsi')
                     ->searchable()
-                    ->placeholder('N/A'),
+                    ->placeholder('-'),
                 Tables\Columns\TextColumn::make('status_pernikahan')
                     ->label('Status')
                     ->badge()

@@ -23,6 +23,8 @@ class Pendaftaran extends Model
         'status',
         'jumlah_bayar',
         'catatan',
+        'reference',
+        'sales_agent_id',
     ];
 
     protected $casts = [
@@ -45,6 +47,11 @@ class Pendaftaran extends Model
     public function roomAssignments(): HasMany
     {
         return $this->hasMany(RoomAssignment::class);
+    }
+
+    public function salesAgent(): BelongsTo
+    {
+        return $this->belongsTo(SalesAgent::class);
     }
 
     // Model Events
