@@ -12,6 +12,12 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Filters\TrashedFilter;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\Section as InfolistSection;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\Actions\Action as InfolistAction;
+use Illuminate\Support\Facades\Storage;
 
 class JamaahResource extends Resource
 {
@@ -135,6 +141,7 @@ class JamaahResource extends Resource
                             ->directory('jamaah-photos')
                             ->disk('public')
                             ->visibility('public')
+                            ->downloadable()
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
@@ -146,10 +153,10 @@ class JamaahResource extends Resource
                             ->required()
                             ->rows(3)
                             ->columnSpanFull(),
-                        Forms\Components\TextInput::make('kabupaten')
-                            ->label('Kabupaten')
-                            ->maxLength(100)
-                            ->columnSpan(1),
+                        // Forms\Components\TextInput::make('kabupaten')
+                        //     ->label('Kabupaten')
+                        //     ->maxLength(100)
+                        //     ->columnSpan(1),
                         Forms\Components\TextInput::make('kecamatan')
                             ->label('Kecamatan')
                             ->maxLength(100)
@@ -213,8 +220,8 @@ class JamaahResource extends Resource
                     ->sortable(),
                 Tables\Columns\ImageColumn::make('foto_jamaah')
                     ->label('Photo')
-                    ->circular()
-                    ->size(40)
+                    // ->circular()
+                    ->size(50) // ukuran kotak 50x50
                     ->disk('public')
                     ->defaultImageUrl(asset('images/default-avatar.svg'))
                     ->toggleable(isToggledHiddenByDefault: false),
@@ -230,10 +237,12 @@ class JamaahResource extends Resource
                     ->label('Gender')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
+                        'Laki-laki' => 'info',
                         'L' => 'info',
                         'P' => 'success',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'Laki-laki' => 'Laki-laki',
                         'L' => 'Laki-laki',
                         'P' => 'Perempuan',
                     }),
@@ -273,12 +282,12 @@ class JamaahResource extends Resource
                     ->placeholder('-')
                     ->color(fn ($state) => $state && $state->isPast() ? 'danger' : 'success')
                     ->toggleable(isToggledHiddenByDefault: false),
-                Tables\Columns\TextColumn::make('kabupaten')
-                    ->label('Kabupaten')
-                    ->searchable()
-                    ->sortable()
-                    ->placeholder('-')
-                    ->toggleable(isToggledHiddenByDefault: false),
+                // Tables\Columns\TextColumn::make('kabupaten')
+                //     ->label('Kabupaten')
+                //     ->searchable()
+                //     ->sortable()
+                //     ->placeholder('-')
+                //     ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('kecamatan')
                     ->label('Kecamatan')
                     ->searchable()
@@ -358,6 +367,88 @@ class JamaahResource extends Resource
                 ]),
             ])
             ->defaultSort('created_at', 'desc');
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                InfolistSection::make('Foto Jamaah')
+                    ->schema([
+                        ImageEntry::make('foto_jamaah')
+                            ->label('Pilgrim Photo')
+                            ->disk('public')
+                            ->defaultImageUrl(asset('images/default-avatar.svg'))
+                            ->size(200)
+                            ->action(
+                                InfolistAction::make('download_photo')
+                                    ->label('Download Photo')
+                                    ->icon('heroicon-o-arrow-down-tray')
+                                    ->color('primary')
+                                    ->action(function ($record) {
+                                        if ($record->foto_jamaah && Storage::disk('public')->exists($record->foto_jamaah)) {
+                                            return Storage::disk('public')->download($record->foto_jamaah, $record->nama_lengkap . '_photo.' . pathinfo($record->foto_jamaah, PATHINFO_EXTENSION));
+                                        }
+                                        
+                                        \Filament\Notifications\Notification::make()
+                                            ->title('Photo not found')
+                                            ->body('The photo file could not be found.')
+                                            ->danger()
+                                            ->send();
+                                    })
+                                    ->visible(fn ($record) => $record->foto_jamaah && Storage::disk('public')->exists($record->foto_jamaah))
+                            ),
+                    ])
+                    ->columns(1),
+                
+                InfolistSection::make('Personal Information')
+                    ->schema([
+                        TextEntry::make('kode_jamaah')
+                            ->label('Kode Jamaah'),
+                        TextEntry::make('nama_lengkap')
+                            ->label('Nama Lengkap'),
+                        TextEntry::make('nama_ayah')
+                            ->label('Nama Ayah'),
+                        TextEntry::make('jenis_kelamin')
+                            ->label('Jenis Kelamin')
+                            ->formatStateUsing(fn (string $state): string => match ($state) {
+                                'Laki-laki' => 'Laki-laki',
+                                'L' => 'Laki-laki',
+                                'P' => 'Perempuan',
+                            }),
+                        TextEntry::make('tgl_lahir')
+                            ->label('Tanggal Lahir')
+                            ->date(),
+                        TextEntry::make('tempat_lahir')
+                            ->label('Tempat Lahir'),
+                    ])
+                    ->columns(2),
+                
+                InfolistSection::make('Contact Information')
+                    ->schema([
+                        TextEntry::make('no_hp')
+                            ->label('No. HP'),
+                        TextEntry::make('alamat')
+                            ->label('Alamat'),
+                        TextEntry::make('kota')
+                            ->label('Kota'),
+                        TextEntry::make('provinsi')
+                            ->label('Provinsi'),
+                    ])
+                    ->columns(2),
+                
+                InfolistSection::make('Passport Information')
+                    ->schema([
+                        TextEntry::make('no_paspor')
+                            ->label('No. Paspor'),
+                        TextEntry::make('kota_paspor')
+                            ->label('Kota Paspor'),
+                        TextEntry::make('tgl_expired_paspor')
+                            ->label('Tanggal Expired Paspor')
+                            ->date(),
+                    ])
+                    ->columns(2),
+            ]);
     }
 
     public static function getEloquentQuery(): Builder

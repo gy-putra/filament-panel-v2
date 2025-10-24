@@ -162,7 +162,7 @@ class RoomResource extends Resource
                         $capacity = $record->kapasitas;
                         
                         if ($occupancy >= $capacity) {
-                            return 'occupied';
+                            return 'full';
                         } elseif ($occupancy > 0) {
                             return 'partially_occupied';
                         } else {
@@ -173,13 +173,13 @@ class RoomResource extends Resource
                     ->color(fn (string $state): string => match ($state) {
                         'available' => 'success',
                         'partially_occupied' => 'warning',
-                        'occupied' => 'danger',
+                        'full' => 'danger',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'available' => 'Tersedia',
                         'partially_occupied' => 'Sebagian Terisi',
-                        'occupied' => 'Penuh',
+                        'full' => 'FULL',
                         default => $state,
                     }),
                 

@@ -22,6 +22,9 @@ class PaketKeberangkatan extends Model
         'kuota_total',
         'kuota_terisi',
         'harga_paket',
+        'harga_quad',
+        'harga_triple',
+        'harga_double',
         'status',
         'deskripsi',
     ];
@@ -32,6 +35,9 @@ class PaketKeberangkatan extends Model
         'kuota_total' => 'integer',
         'kuota_terisi' => 'integer',
         'harga_paket' => 'decimal:2',
+        'harga_quad' => 'decimal:2',
+        'harga_triple' => 'decimal:2',
+        'harga_double' => 'decimal:2',
         'status' => 'string',
     ];
 

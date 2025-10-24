@@ -75,6 +75,9 @@ class StaffResource extends Resource
                                 'dokumen' => 'Dokumen',
                                 'medis' => 'Medis',
                                 'lainnya' => 'Lainnya',
+                                'Marketing' => 'Marketing',
+                                'Finance' => 'Finance',
+                                'Operational' => 'Operational',
                             ]),
                     ])
                     ->columns(2),
@@ -95,9 +98,14 @@ class StaffResource extends Resource
                     ->label('Jenis Kelamin')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'L' => 'blue',
-                        'P' => 'pink',
-                        default => 'gray',
+                        'Laki-laki' => 'info',
+                        'L' => 'info',
+                        'P' => 'success',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'Laki-laki' => 'Laki-laki',
+                        'L' => 'Laki-laki',
+                        'P' => 'Perempuan',
                     }),
                 
                 TextColumn::make('tipe_staff')
@@ -110,7 +118,9 @@ class StaffResource extends Resource
                         'dokumen' => 'primary',
                         'medis' => 'danger',
                         'lainnya' => 'gray',
-                        default => 'gray',
+                        'Marketing' => 'success',
+                        'Finance' => 'warning',
+                        'Operational' => 'info',
                     }),
                 
                 TextColumn::make('no_hp')
@@ -144,6 +154,9 @@ class StaffResource extends Resource
                         'dokumen' => 'Dokumen',
                         'medis' => 'Medis',
                         'lainnya' => 'Lainnya',
+                        'Marketing' => 'Marketing',
+                        'Finance' => 'Finance',
+                        'Operational' => 'Operational',
                     ]),
             ])
             ->actions([

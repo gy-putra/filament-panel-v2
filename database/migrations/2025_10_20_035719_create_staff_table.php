@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('staff', function (Blueprint $table) {
             $table->id();
             $table->string('nama', 150);
-            $table->enum('jenis_kelamin', ['L', 'P']);
+            $table->enum('jenis_kelamin', ['Laki-laki', 'P']);
             $table->string('no_hp', 20);
             $table->string('email', 100)->nullable();
             $table->enum('tipe_staff', ['muthowif', 'muthowifah', 'lapangan', 'dokumen', 'medis', 'lainnya']);

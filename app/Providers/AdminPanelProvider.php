@@ -90,6 +90,10 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
+                \App\Filament\Widgets\QuickKpisWidget::class,
+                \App\Filament\Widgets\RemainingQuotaWidget::class,
+                \App\Filament\Widgets\OutstandingBillsWidget::class,
+                \App\Filament\Widgets\RoomStatusWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

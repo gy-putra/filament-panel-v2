@@ -63,7 +63,7 @@
 - `jamaah_id BIGINT` FK → `jamaah(id)` **RESTRICT on delete** (prevent losing enrollment history)
 - `status_pendaftar ENUM('belum_daftar','sudah_dp','lunas','dokumen_lengkap','siap_berangkat')` default `belum_daftar`
 - `preferensi_kamar ENUM('single','double','triple','quad','no_preference')` default `no_preference`
-- `gender ENUM('L','P')` required (copy from Jamaah at creation for grouping)
+- `gender ENUM(Laki-laki,'P')` required (copy from Jamaah at creation for grouping)
 - `is_active BOOLEAN` default true
 - `catatan TEXT` nullable
 - `timestamps`
@@ -154,7 +154,7 @@
 - `label_kamar VARCHAR(50)` required
 - `tipe_kamar ENUM('SGL','DBL','TPL','QUAD')` required
 - `kapasitas TINYINT` required (1–4)
-- `gender ENUM('L','P')` required (used for grouping occupants)
+- `gender ENUM(Laki-laki,'P')` required (used for grouping occupants)
 - `is_locked BOOLEAN` default false
 - `timestamps`
 
@@ -202,7 +202,7 @@
 **Columns**
 - `id BIGINT` PK
 - `nama VARCHAR(150)` required
-- `jenis_kelamin ENUM('L','P')` required
+- `jenis_kelamin ENUM(Laki-laki,'P')` required
 - `no_hp VARCHAR(20)` required
 - `email VARCHAR(100)` nullable
 - `tipe_staff ENUM('muthowif','muthowifah','lapangan','dokumen','medis','lainnya')` required
@@ -411,7 +411,7 @@ Schema::create('pendaftaran', function (Blueprint $t) {
   $t->foreignId('jamaah_id')->constrained('jamaah'); // restrict by default
   $t->enum('status_pendaftar', ['belum_daftar','sudah_dp','lunas','dokumen_lengkap','siap_berangkat'])->default('belum_daftar');
   $t->enum('preferensi_kamar', ['single','double','triple','quad','no_preference'])->default('no_preference');
-  $t->enum('gender', ['L','P']);
+  $t->enum('gender', [Laki-laki,'P']);
   $t->boolean('is_active')->default(true);
   $t->text('catatan')->nullable();
   $t->timestamps();
@@ -427,7 +427,7 @@ Schema::create('rooms', function (Blueprint $t) {
   $t->string('label_kamar', 50);
   $t->enum('tipe_kamar', ['SGL','DBL','TPL','QUAD']);
   $t->tinyInteger('kapasitas');
-  $t->enum('gender', ['L','P']);
+  $t->enum('gender', [Laki-laki,'P']);
   $t->boolean('is_locked')->default(false);
   $t->timestamps();
   $t->unique(['paket_id','label_kamar']);

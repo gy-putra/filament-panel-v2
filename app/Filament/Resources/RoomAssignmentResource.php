@@ -53,7 +53,9 @@ class RoomAssignmentResource extends Resource
                         Select::make('room_id')
                             ->label('Kamar')
                             ->required()
-                            ->relationship('room', 'nomor_kamar')
+                            ->relationship('room', 'nomor_kamar', function ($query) {
+                                return $query->whereRaw('(SELECT COUNT(*) FROM room_assignments WHERE room_assignments.room_id = rooms.id) < rooms.kapasitas');
+                            })
                             ->searchable(['nomor_kamar', 'tipe_kamar'])
                             ->preload()
                             ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->nomor_kamar} ({$record->tipe_kamar} - {$record->kapasitas} orang)"),
@@ -88,14 +90,14 @@ class RoomAssignmentResource extends Resource
                     ->label('Gender')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'L' => 'blue',
-                        'P' => 'pink',
-                        default => 'gray',
+                        'Laki-laki' => 'info',
+                        'L' => 'info',
+                        'P' => 'success',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'Laki-laki' => 'Laki-laki',
                         'L' => 'Laki-laki',
                         'P' => 'Perempuan',
-                        default => $state,
                     }),
                 
                 TextColumn::make('room.nomor_kamar')

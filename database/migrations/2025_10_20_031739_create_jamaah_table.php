@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('kode_jamaah', 20)->unique();
             $table->string('nama_lengkap', 150);
             $table->string('nama_ayah', 150);
-            $table->enum('jenis_kelamin', ['L', 'P']);
+            $table->enum('jenis_kelamin', ['Laki-laki', 'P']);
             $table->date('tgl_lahir');
             $table->string('tempat_lahir', 100)->nullable();
             $table->enum('pendidikan_terakhir', ['SD', 'SMP', 'SMA', 'D3', 'S1', 'S2', 'S3', 'Lainnya']);

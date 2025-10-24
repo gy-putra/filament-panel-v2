@@ -51,14 +51,53 @@ class PendaftaranResource extends Resource
                         Select::make('paket_keberangkatan_id')
                             ->label('Paket Keberangkatan')
                             ->required()
-                            ->relationship('paketKeberangkatan', 'nama_paket')
+                            ->relationship('paketKeberangkatan', 'nama_paket', function ($query) {
+                                return $query->withCount('pendaftarans');
+                            })
                             ->searchable(['nama_paket', 'kode_paket'])
                             ->preload()
                             ->reactive()
+                            ->getOptionLabelFromRecordUsing(function ($record) {
+                                $sisa = $record->kuota_total - $record->pendaftarans_count;
+                                if ($sisa <= 0) {
+                                    return "{$record->nama_paket} - 🚫 FULL";
+                                } elseif ($sisa <= 3) {
+                                    return "{$record->nama_paket} - ⚠️ {$sisa} seats left";
+                                } else {
+                                    return "{$record->nama_paket} - ✅ {$sisa} seats available";
+                                }
+                            })
                             ->afterStateUpdated(function ($state, callable $set) {
                                 // Clear jamaah selection when paket changes to avoid conflicts
                                 $set('jamaah_id', null);
-                            }),
+                            })
+                            ->rules([
+                                'required',
+                                function (Get $get, $livewire) {
+                                    return function (string $attribute, $value, \Closure $fail) use ($get, $livewire) {
+                                        if ($value) {
+                                            $paket = \App\Models\PaketKeberangkatan::withCount('pendaftarans')->find($value);
+                                            if ($paket) {
+                                                $sisa = $paket->kuota_total - $paket->pendaftarans_count;
+                                                
+                                                // Check if we're in edit mode
+                                                $recordId = null;
+                                                if (isset($livewire->record) && $livewire->record) {
+                                                    $recordId = $livewire->record->id;
+                                                    // If editing, don't count current record
+                                                    if ($livewire->record->paket_keberangkatan_id == $value) {
+                                                        $sisa += 1; // Add back the current record's seat
+                                                    }
+                                                }
+                                                
+                                                if ($sisa <= 0) {
+                                                    $fail('Paket keberangkatan ini sudah penuh. Tidak dapat menerima pendaftaran baru.');
+                                                }
+                                            }
+                                        }
+                                    };
+                                },
+                            ]),
                         
                         Select::make('jamaah_id')
                             ->label('Jamaah')
@@ -260,6 +299,11 @@ class PendaftaranResource extends Resource
                     ->searchable()
                     ->preload(),
             ])
+            ->modifyQueryUsing(function (Builder $query) {
+                return $query->with(['paketKeberangkatan' => function ($query) {
+                    $query->withCount('pendaftarans');
+                }]);
+            })
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()

@@ -30,7 +30,7 @@ return new class extends Migration
         });
         
         Schema::table('rooms', function (Blueprint $table) {
-            $table->enum('gender_preference', ['L', 'P', 'mixed'])->default('mixed')->after('kapasitas');
+            $table->enum('gender_preference', ['Laki-laki', 'P', 'mixed'])->default('mixed')->after('kapasitas');
         });
     }
 };

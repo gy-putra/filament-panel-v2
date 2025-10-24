@@ -67,6 +67,32 @@ class Jamaah extends Model
     ];
 
     /**
+     * Mutator untuk membersihkan nilai jenis_kelamin
+     */
+    public function setJenisKelaminAttribute($value)
+    {
+        // Trim whitespace dan bersihkan nilai
+        $cleanValue = trim($value);
+        
+        // Ganti "Laki - laki" (dengan spasi) menjadi "Laki-laki"
+        $cleanValue = preg_replace('/Laki\s*-\s*laki/i', 'Laki-laki', $cleanValue);
+        
+        // Mapping nilai umum ke enum database yang benar ('L' dan 'P')
+        $genderMap = [
+            'Laki-laki' => 'L',
+            'Laki' => 'L',
+            'L' => 'L',
+            'Male' => 'L',
+            'Perempuan' => 'P',
+            'Wanita' => 'P',
+            'P' => 'P',
+            'Female' => 'P'
+        ];
+        
+        $this->attributes['jenis_kelamin'] = $genderMap[$cleanValue] ?? 'L';
+    }
+
+    /**
      * Boot the model.
      */
     protected static function boot()
@@ -138,7 +164,7 @@ class Jamaah extends Model
      */
     public function getFullNameWithGenderAttribute()
     {
-        return $this->nama_lengkap . ' (' . ($this->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan') . ')';
+        return $this->nama_lengkap . ' (' . ($this->jenis_kelamin === 'Laki-laki' ? 'Laki-laki' : 'Perempuan') . ')';
     }
 
     /**

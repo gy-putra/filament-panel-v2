@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('nomor_kamar', 20);
             $table->enum('tipe_kamar', ['single', 'double', 'triple', 'quad']);
             $table->integer('kapasitas');
-            $table->enum('gender_preference', ['L', 'P', 'mixed'])->default('mixed');
+            $table->enum('gender_preference', ['Laki-laki', 'P', 'mixed'])->default('mixed');
             $table->boolean('is_locked')->default(false);
             $table->timestamps();
 

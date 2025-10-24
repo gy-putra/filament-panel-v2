@@ -23,6 +23,11 @@ use Filament\Forms\Components\Section;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Filament\Tables\Actions\ViewAction;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\Section as InfolistSection;
+use Filament\Infolists\Components\RepeatableEntry;
 
 class PaketKeberangkatanResource extends Resource
 {
@@ -96,6 +101,24 @@ class PaketKeberangkatanResource extends Resource
                             ->prefix('Rp')
                             ->minValue(0),
                         
+                        TextInput::make('harga_quad')
+                            ->label('Harga Quad')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->minValue(0),
+                        
+                        TextInput::make('harga_triple')
+                            ->label('Harga Triple')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->minValue(0),
+                        
+                        TextInput::make('harga_double')
+                            ->label('Harga Double')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->minValue(0),
+                        
                         Select::make('status')
                             ->label('Status')
                             ->required()
@@ -121,32 +144,76 @@ class PaketKeberangkatanResource extends Resource
                     ->label('Kode Paket')
                     ->searchable()
                     ->sortable()
+                    ->alignCenter()
                     ->weight(FontWeight::Bold),
                 
                 TextColumn::make('nama_paket')
                     ->label('Nama Paket')
                     ->searchable(['nama_paket'])
                     ->sortable()
+                    ->alignCenter()
                     ->weight(FontWeight::Bold),
                 
-                TextColumn::make('tgl_keberangkatan')
-                    ->label('Tanggal Keberangkatan')
-                    ->date('d M Y')
-                    ->sortable(),
-                
-                TextColumn::make('tgl_kepulangan')
-                    ->label('Tanggal Kepulangan')
-                    ->date('d M Y')
-                    ->sortable(),
-                
                 TextColumn::make('kuota_total')
-                    ->label('Kuota')
+                    ->label('Seat')
+                    ->badge()
+                    ->color(fn ($record) => 
+                        ($record->kuota_total - $record->pendaftarans_count) <= 0
+                            ? 'danger'
+                            : (($record->kuota_total - $record->pendaftarans_count) <= 3 ? 'warning' : 'success')
+                    )
+                    ->formatStateUsing(function ($record) {
+                        $sisa = $record->kuota_total - $record->pendaftarans_count;
+                        if ($sisa <= 0) {
+                            return '🚫 FULL - NO SEATS AVAILABLE';
+                        } elseif ($sisa <= 3) {
+                            return "⚠️ {$sisa} SEATS LEFT - HURRY!";
+                        } else {
+                            return "✅ {$sisa} SEATS AVAILABLE";
+                        }
+                    })
+                    ->alignCenter()
                     ->sortable(),
+
+                
+                TextColumn::make('harga_quad')
+                    ->label('Quad')
+                    ->money('IDR')
+                    ->sortable()
+                    ->alignCenter()
+                    ->toggleable(isToggledHiddenByDefault: false),
+                
+                TextColumn::make('harga_triple')
+                    ->label('Triple')
+                    ->money('IDR')
+                    ->sortable()
+                    ->alignCenter()
+                    ->toggleable(isToggledHiddenByDefault: false),
+                
+                TextColumn::make('harga_double')
+                    ->label('Double')
+                    ->money('IDR')
+                    ->sortable()
+                    ->alignCenter()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 
                 TextColumn::make('harga_paket')
                     ->label('Harga')
                     ->money('IDR')
-                    ->sortable(),
+                    ->sortable()
+                    ->alignCenter(),
+                
+                TextColumn::make('tgl_keberangkatan')
+                    ->label('Tanggal Keberangkatan')
+                    ->date('d M Y')
+                    ->sortable()
+                    ->alignCenter(),
+                
+                TextColumn::make('tgl_kepulangan')
+                    ->label('Tanggal Kepulangan')
+                    ->date('d M Y')
+                    ->sortable()
+                    ->alignCenter(),    
                 
                 TextColumn::make('status')
                     ->label('Status')
@@ -159,12 +226,19 @@ class PaketKeberangkatanResource extends Resource
                         'cancelled' => 'warning',
                         default => 'gray',
                     })
+                    ->alignCenter()
                     ->sortable(),
+                
+                TextColumn::make('deskripsi')
+                    ->label('Deskripsi')
+                    ->alignCenter()
+                    ->limit(50),
                 
                 TextColumn::make('pendaftarans_count')
                     ->label('Jumlah Pendaftar')
                     ->default(0)
-                    ->sortable(),
+                    ->sortable()
+                    ->alignCenter(),
                 
                 TextColumn::make('created_at')
                     ->label('Dibuat')
@@ -203,6 +277,7 @@ class PaketKeberangkatanResource extends Resource
                     }),
             ])
             ->actions([
+                ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -212,6 +287,182 @@ class PaketKeberangkatanResource extends Resource
                 ]),
             ])
             ->defaultSort('tgl_keberangkatan', 'desc');
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                InfolistSection::make('Informasi Paket')
+                    ->schema([
+                        TextEntry::make('kode_paket')
+                            ->label('Kode Paket')
+                            ->weight('bold'),
+                        
+                        TextEntry::make('nama_paket')
+                            ->label('Nama Paket')
+                            ->weight('bold'),
+                        
+                        TextEntry::make('deskripsi')
+                            ->label('Deskripsi')
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2),
+                
+                InfolistSection::make('Jadwal & Kuota')
+                    ->schema([
+                        TextEntry::make('tgl_keberangkatan')
+                            ->label('Tanggal Keberangkatan')
+                            ->date('d M Y'),
+                        
+                        TextEntry::make('tgl_kepulangan')
+                            ->label('Tanggal Kepulangan')
+                            ->date('d M Y'),
+                        
+                        TextEntry::make('kuota_total')
+                            ->label('Seat Total')
+                            ->default(0),
+                        
+                        TextEntry::make('availability_status')
+                            ->label('Status Ketersediaan')
+                            ->state(function ($record) {
+                                $sisa = $record->kuota_total - $record->pendaftarans_count;
+                                if ($sisa <= 0) {
+                                    return '🚫 FULL - NO SEATS AVAILABLE';
+                                } elseif ($sisa <= 3) {
+                                    return "⚠️ {$sisa} SEATS LEFT - HURRY!";
+                                } else {
+                                    return "✅ {$sisa} SEATS AVAILABLE";
+                                }
+                            })
+                            ->badge()
+                            ->color(function ($record) {
+                                $sisa = $record->kuota_total - ($record->pendaftarans_count ?? 0);
+                                if ($sisa <= 0) return 'danger';
+                                if ($sisa <= 3) return 'warning';
+                                return 'success';
+                            })
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(3),
+                
+                InfolistSection::make('Harga & Status')
+                    ->schema([
+                        TextEntry::make('harga_paket')
+                            ->label('Harga Paket')
+                            ->money('IDR'),
+                        
+                        TextEntry::make('harga_quad')
+                            ->label('Harga Quad')
+                            ->money('IDR')
+                            ->placeholder('Tidak tersedia'),
+                        
+                        TextEntry::make('harga_triple')
+                            ->label('Harga Triple')
+                            ->money('IDR')
+                            ->placeholder('Tidak tersedia'),
+                        
+                        TextEntry::make('harga_double')
+                            ->label('Harga Double')
+                            ->money('IDR')
+                            ->placeholder('Tidak tersedia'),
+                        
+                        TextEntry::make('status')
+                            ->label('Status')
+                            ->badge()
+                            ->color(fn (string $state): string => match ($state) {
+                                'draft' => 'gray',
+                                'open' => 'info',
+                                'published' => 'success',
+                                'closed' => 'danger',
+                                'cancelled' => 'warning',
+                                default => 'gray',
+                            }),
+                    ])
+                    ->columns(2),
+                
+                InfolistSection::make('Itinerary')
+                    ->schema([
+                        RepeatableEntry::make('itinerary')
+                            ->label('')
+                            ->schema([
+                                TextEntry::make('hari_ke')
+                                    ->label('Hari')
+                                    ->prefix('Hari ke-'),
+                                
+                                TextEntry::make('tanggal')
+                                    ->label('Tanggal')
+                                    ->date('d M Y'),
+                                
+                                TextEntry::make('judul')
+                                    ->label('Judul')
+                                    ->weight('bold'),
+                                
+                                TextEntry::make('deskripsi')
+                                    ->label('Deskripsi')
+                                    ->columnSpanFull(),
+                            ])
+                            ->columns(3)
+                            ->contained(false),
+                    ])
+                    ->collapsible(),
+                
+                InfolistSection::make('Hotel')
+                    ->schema([
+                        RepeatableEntry::make('hotelBookings')
+                            ->label('')
+                            ->schema([
+                                TextEntry::make('hotel.nama')
+                                    ->label('Nama Hotel')
+                                    ->weight('bold'),
+                                
+                                TextEntry::make('hotel.kota')
+                                    ->label('Kota'),
+                                
+                                TextEntry::make('check_in')
+                                    ->label('Check In')
+                                    ->date('d M Y'),
+                                
+                                TextEntry::make('check_out')
+                                    ->label('Check Out')
+                                    ->date('d M Y'),
+                            ])
+                            ->columns(2)
+                            ->contained(false),
+                    ])
+                    ->collapsible(),
+                
+                InfolistSection::make('Penerbangan')
+                    ->schema([
+                        RepeatableEntry::make('flightSegments')
+                            ->label('')
+                            ->schema([
+                                TextEntry::make('maskapai.nama')
+                                    ->label('Maskapai')
+                                    ->weight('bold'),
+                                
+                                TextEntry::make('flight_number')
+                                    ->label('Nomor Penerbangan'),
+                                
+                                TextEntry::make('departure_airport')
+                                    ->label('Bandara Keberangkatan'),
+                                
+                                TextEntry::make('arrival_airport')
+                                    ->label('Bandara Tujuan'),
+                                
+                                TextEntry::make('departure_time')
+                                    ->label('Waktu Keberangkatan')
+                                    ->dateTime('d M Y H:i'),
+                                
+                                TextEntry::make('arrival_time')
+                                    ->label('Waktu Tiba')
+                                    ->dateTime('d M Y H:i'),
+                            ])
+                            ->columns(2)
+                            ->contained(false),
+                    ])
+                    ->collapsible(),
+            ]);
     }
 
     public static function getRelations(): array
@@ -226,6 +477,7 @@ class PaketKeberangkatanResource extends Resource
         return [
             'index' => Pages\ListPaketKeberangkatans::route('/'),
             'create' => Pages\CreatePaketKeberangkatan::route('/create'),
+            'view' => Pages\ViewPaketKeberangkatan::route('/{record}'),
             'edit' => Pages\EditPaketKeberangkatan::route('/{record}/edit'),
         ];
     }

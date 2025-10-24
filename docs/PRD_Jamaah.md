@@ -29,7 +29,7 @@ Create a complete **Jamaah** master-data module (model, migration, factory/seed,
 | kode_jamaah | VARCHAR(20) | **UNIQUE**, not null | Internal code, e.g., `JM2025-001`. |
 | nama_lengkap | VARCHAR(150) | not null | Full legal name (KTP/passport). |
 | nama_ayah | VARCHAR(150) | not null | Biological father’s name (manifest/visa needs). |
-| jenis_kelamin | ENUM('L','P') | not null | L = Laki-laki, P = Perempuan. |
+| jenis_kelamin | ENUM(Laki-laki,'P') | not null | L = Laki-laki, P = Perempuan. |
 | tgl_lahir | DATE | not null | Date of birth. |
 | tempat_lahir | VARCHAR(100) | nullable | Birth city. |
 | pendidikan_terakhir | ENUM('SD','SMP','SMA','D3','S1','S2','S3','Lainnya') | not null | Highest education. |
@@ -262,7 +262,7 @@ Schema::create('jamaah', function (Blueprint $table) {
     $table->string('kode_jamaah', 20)->unique();
     $table->string('nama_lengkap', 150);
     $table->string('nama_ayah', 150);
-    $table->enum('jenis_kelamin', ['L','P']);
+    $table->enum('jenis_kelamin', [Laki-laki,'P']);
     $table->date('tgl_lahir');
     $table->string('tempat_lahir', 100)->nullable();
     $table->enum('pendidikan_terakhir', ['SD','SMP','SMA','D3','S1','S2','S3','Lainnya']);
