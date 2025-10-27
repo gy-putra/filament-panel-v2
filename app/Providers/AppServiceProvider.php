@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\PaketKeberangkatan;
 use App\Models\Pendaftaran;
 use App\Models\TabunganAlokasi;
 use App\Models\User;
+use App\Observers\PaketKeberangkatanObserver;
 use App\Observers\PendaftaranObserver;
 use App\Observers\PendaftaranRoomingObserver;
 use App\Observers\TabunganAlokasiObserver;
@@ -31,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Register model observers with proper dependency injection
+        PaketKeberangkatan::observe(app(PaketKeberangkatanObserver::class));
         Pendaftaran::observe(app(PendaftaranObserver::class));
         Pendaftaran::observe(app(PendaftaranRoomingObserver::class));
         TabunganAlokasi::observe(app(TabunganAlokasiObserver::class));

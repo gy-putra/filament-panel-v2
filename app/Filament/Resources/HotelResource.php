@@ -88,9 +88,10 @@ class HotelResource extends Resource
                 TextColumn::make('kota')
                     ->label('Kota')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match (strtolower($state)) {
                         'makkah' => 'success',
                         'madinah' => 'info',
+                        default => 'gray',
                     }),
                 
                 TextColumn::make('hotel_bookings_count')

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PaketKeberangkatanResource\Pages;
 use App\Filament\Resources\PaketKeberangkatanResource\RelationManagers;
 use App\Models\PaketKeberangkatan;
+use App\Models\UmrahProgram;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -28,6 +29,7 @@ use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Forms\Components\RichEditor;
 
 class PaketKeberangkatanResource extends Resource
 {
@@ -58,15 +60,47 @@ class PaketKeberangkatanResource extends Resource
                             ->unique(ignoreRecord: true)
                             ->placeholder('Contoh: UMRH-2025001'),
                         
+                        Select::make('umrah_program_id')
+                            ->label('Program Title')
+                            ->relationship('umrahProgram', 'program_name')
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Pilih Program Umrah')
+                            ->createOptionForm([
+                                TextInput::make('program_code')
+                                    ->label('Program Code')
+                                    ->required()
+                                    ->maxLength(20)
+                                    ->unique('umrah_programs', 'program_code'),
+                                TextInput::make('program_name')
+                                    ->label('Program Name')
+                                    ->required()
+                                    ->maxLength(150),
+                            ])
+                            ->createOptionUsing(function (array $data): int {
+                                return UmrahProgram::create($data)->getKey();
+                            }),
+                        
                         TextInput::make('nama_paket')
                             ->label('Nama Paket')
                             ->required()
                             ->maxLength(255),
                         
-                        Textarea::make('deskripsi')
+                        RichEditor::make('deskripsi')
                             ->label('Deskripsi')
-                            ->rows(3)
-                            ->maxLength(1000),
+                            ->toolbarButtons([
+                                'bold',
+                                'italic',
+                                'underline',
+                                'bulletList',
+                                'orderedList',
+                                'h2',
+                                'h3',
+                                'link',
+                                'undo',
+                                'redo',
+                            ])
+                            ->maxLength(5000),
                     ])
                     ->columns(2),
                 
@@ -146,7 +180,15 @@ class PaketKeberangkatanResource extends Resource
                     ->sortable()
                     ->alignCenter()
                     ->weight(FontWeight::Bold),
-                
+
+                TextColumn::make('umrahProgram.program_name')
+                    ->label('Program Title')
+                    ->searchable(['umrah_programs.program_name'])
+                    ->sortable()
+                    ->alignCenter()
+                    ->weight(FontWeight::Bold)
+                    ->placeholder('No Program Selected'),
+
                 TextColumn::make('nama_paket')
                     ->label('Nama Paket')
                     ->searchable(['nama_paket'])
@@ -232,7 +274,23 @@ class PaketKeberangkatanResource extends Resource
                 TextColumn::make('deskripsi')
                     ->label('Deskripsi')
                     ->alignCenter()
-                    ->limit(50),
+                    ->html()
+                    ->limit(100)
+                    ->formatStateUsing(function ($state) {
+                        if (empty($state)) {
+                            return '-';
+                        }
+                        
+                        // Strip HTML tags and get plain text for display
+                        $plainText = strip_tags($state);
+                        
+                        // Limit the text and add ellipsis if needed
+                        if (strlen($plainText) > 100) {
+                            return substr($plainText, 0, 100) . '...';
+                        }
+                        
+                        return $plainText;
+                    }),
                 
                 TextColumn::make('pendaftarans_count')
                     ->label('Jumlah Pendaftar')
@@ -279,11 +337,29 @@ class PaketKeberangkatanResource extends Resource
             ->actions([
                 ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->label('Delete (Cascade)')
+                    ->modalHeading('Delete Package and All Related Data')
+                    ->modalDescription('This will permanently delete the package and ALL related data including registrations, itineraries, hotels, flights, and staff assignments. This action cannot be undone.')
+                    ->modalSubmitActionLabel('Yes, Delete Everything')
+                    ->action(function ($record) {
+                        $record->cascadeDelete();
+                    })
+                    ->requiresConfirmation(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->label('Delete Selected (Cascade)')
+                        ->modalHeading('Delete Packages and All Related Data')
+                        ->modalDescription('This will permanently delete the selected packages and ALL their related data. This action cannot be undone.')
+                        ->modalSubmitActionLabel('Yes, Delete Everything')
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                $record->cascadeDelete();
+                            }
+                        })
+                        ->requiresConfirmation(),
                 ]),
             ])
             ->defaultSort('tgl_keberangkatan', 'desc');
@@ -305,7 +381,23 @@ class PaketKeberangkatanResource extends Resource
                         
                         TextEntry::make('deskripsi')
                             ->label('Deskripsi')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->html()
+                            ->formatStateUsing(function ($state) {
+                                if (empty($state)) {
+                                    return '-';
+                                }
+                                
+                                // If the content is already HTML from RichEditor, display it as-is
+                                // If it's plain text, use auto_markdown to format it
+                                if (strip_tags($state) !== $state) {
+                                    // Content contains HTML tags, display as-is
+                                    return $state;
+                                } else {
+                                    // Plain text, use auto_markdown formatter
+                                    return auto_markdown($state);
+                                }
+                            }),
                     ])
                     ->columns(2),
                 
@@ -400,7 +492,23 @@ class PaketKeberangkatanResource extends Resource
                                 
                                 TextEntry::make('deskripsi')
                                     ->label('Deskripsi')
-                                    ->columnSpanFull(),
+                                    ->columnSpanFull()
+                                    ->html()
+                                    ->formatStateUsing(function ($state) {
+                                        if (empty($state)) {
+                                            return '-';
+                                        }
+                                        
+                                        // If the content is already HTML from RichEditor, display it as-is
+                                        // If it's plain text, use auto_markdown to format it
+                                        if (strip_tags($state) !== $state) {
+                                            // Content contains HTML tags, display as-is
+                                            return $state;
+                                        } else {
+                                            // Plain text, use auto_markdown formatter
+                                            return auto_markdown($state);
+                                        }
+                                    }),
                             ])
                             ->columns(3)
                             ->contained(false),
@@ -441,22 +549,31 @@ class PaketKeberangkatanResource extends Resource
                                     ->label('Maskapai')
                                     ->weight('bold'),
                                 
-                                TextEntry::make('flight_number')
+                                TextEntry::make('nomor_penerbangan')
                                     ->label('Nomor Penerbangan'),
                                 
-                                TextEntry::make('departure_airport')
+                                TextEntry::make('asal')
                                     ->label('Bandara Keberangkatan'),
                                 
-                                TextEntry::make('arrival_airport')
+                                TextEntry::make('tujuan')
                                     ->label('Bandara Tujuan'),
                                 
-                                TextEntry::make('departure_time')
+                                TextEntry::make('waktu_berangkat')
                                     ->label('Waktu Keberangkatan')
                                     ->dateTime('d M Y H:i'),
                                 
-                                TextEntry::make('arrival_time')
+                                TextEntry::make('waktu_tiba')
                                     ->label('Waktu Tiba')
                                     ->dateTime('d M Y H:i'),
+                                
+                                TextEntry::make('tipe')
+                                    ->label('Tipe')
+                                    ->badge()
+                                    ->color(fn (string $state): string => match ($state) {
+                                        'keberangkatan' => 'success',
+                                        'kepulangan' => 'warning',
+                                        default => 'gray',
+                                    }),
                             ])
                             ->columns(2)
                             ->contained(false),

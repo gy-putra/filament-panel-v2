@@ -237,12 +237,10 @@ class JamaahResource extends Resource
                     ->label('Gender')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'Laki-laki' => 'info',
                         'L' => 'info',
                         'P' => 'success',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'Laki-laki' => 'Laki-laki',
                         'L' => 'Laki-laki',
                         'P' => 'Perempuan',
                     }),

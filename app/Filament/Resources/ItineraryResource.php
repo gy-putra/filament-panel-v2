@@ -21,6 +21,7 @@ use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Forms\Components\RichEditor;
 
 class ItineraryResource extends Resource
 {
@@ -68,9 +69,21 @@ class ItineraryResource extends Resource
                             ->required()
                             ->maxLength(200),
                         
-                        Textarea::make('deskripsi')
+                        RichEditor::make('deskripsi')
                             ->label('Deskripsi')
-                            ->rows(3),
+                            ->toolbarButtons([
+                                'bold',
+                                'italic',
+                                'underline',
+                                'bulletList',
+                                'orderedList',
+                                'h2',
+                                'h3',
+                                'link',
+                                'undo',
+                                'redo',
+                            ])
+                            ->maxLength(5000),
                     ])
                     ->columns(2),
             ]);
